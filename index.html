@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Kingshot Outpost Map Editor</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    body, html {
+      margin: 0;
+      height: 100%;
+    }
+    #map {
+      height: 100%;
+      width: calc(100% - 250px);
+      float: right;
+    }
+    #sidebar {
+      width: 250px;
+      height: 100%;
+      background: #1a1a1a;
+      color: #fff;
+      padding: 10px;
+      box-sizing: border-box;
+      overflow-y: auto;
+      float: left;
+      font-family: sans-serif;
+    }
+    .outpost-entry {
+      background: #333;
+      border-radius: 6px;
+      margin: 5px 0;
+      padding: 8px;
+      font-size: 14px;
+    }
+    .outpost-entry strong {
+      color: #8cf;
+    }
+    .owner-marker {
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+      text-align: center;
+      padding: 2px 6px;
+      border-radius: 4px;
+      box-shadow: 0 0 4px rgba(0,0,0,0.5);
+      white-space: nowrap;
+      min-width: 28px;
+    }
+  </style>
+</head>
+<body>
+  <div id="sidebar">
+    <h3>Outposts</h3>
+    <button onclick="clearAllMarkers()" style="
+    background-color: #c0392b;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    cursor: pointer;
+  ">🗑️ Clear All</button>
+    <div id="outpost-list">No outposts yet.</div>
+    <button onclick="exportMarkers()" style="margin-bottom: 5px;">📤 Export JSON</button>
+    <button onclick="importMarkers()">📥 Import JSON</button>
+    <input type="file" id="import-file" style="display: none;" />
+  </div>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+function exportMarkers() {
+  const data = markers.map(m => m.outpost);
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'kingshot-outposts.json';
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+
+function importMarkers() {
+  document.getElementById('import-file').click();
+}
+
+document.getElementById('import-file').addEventListener('change', function (e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function (event) {
+    try {
+      const data = JSON.parse(event.target.result);
+      clearAllMarkers();
+      data.forEach(op => addOutpost(op.y, op.x, op.name, op.owner));
+    } catch (err) {
+      alert("Failed to load JSON");
+    }
+  };
+  reader.readAsText(file);
+});
+  function clearAllMarkers() {
+    if (!confirm("Are you sure you want to delete all markers?")) return;
+
+    // Remove all markers from the map
+    markers.forEach(({ marker }) => marker.remove());
+    markers.length = 0;
+
+    // Clear saved data
+    localStorage.removeItem(STORAGE_KEY);
+
+    // Update sidebar
+    updateOutpostList();
+  }
+
+    const imageWidth = 1000;
+    const imageHeight = 709;
+    const imageBounds = [[0, 0], [imageHeight, imageWidth]];
+    const STORAGE_KEY = 'kingshot-outposts';
+
+    const map = L.map('map', {
+      crs: L.CRS.Simple,
+      minZoom: -1,
+      maxZoom: 2
+    });
+
+    map.fitBounds(imageBounds);
+    L.imageOverlay('kingshot-map.png', imageBounds).addTo(map);
+
+    const markers = [];
+
+    // Update sidebar UI
+    function updateOutpostList() {
+      const container = document.getElementById('outpost-list');
+      if (markers.length === 0) {
+        container.innerHTML = "No outposts yet.";
+        return;
+      }
+
+      container.innerHTML = markers.map(({ outpost }) => `
+        <div class="outpost-entry">
+          <strong>${outpost.name}</strong><br>
+          Owner: ${outpost.owner || 'Unowned'}
+        </div>
+      `).join('');
+    }
+const allianceColors = {};
+const defaultColors = [
+  '#e6194b', // red
+  '#3cb44b', // green
+  '#4363d8', // blue
+  '#f58231', // orange
+  '#911eb4', // purple
+  '#46f0f0', // cyan
+  '#f032e6', // magenta
+  '#008080', // teal
+  '#e6beff', // lavender
+  '#9a6324', // brown
+  '#800000', // maroon
+  '#1e90ff', // dodgerblue
+  '#32cd32', // limegreen
+  '#8a2be2', // blueviolet
+  '#ff69b4', // hotpink
+  '#00ced1', // darkturquoise
+  '#a52a2a', // darkred
+  '#ff4500', // orangered
+  '#2f4f4f', // darkslategray
+  '#556b2f'  // darkolivegreen
+];
+
+function getOwnerColor(owner) {
+  if (!owner) return '#888';
+  if (!allianceColors[owner]) {
+    const index = Object.keys(allianceColors).length % defaultColors.length;
+    allianceColors[owner] = defaultColors[index];
+  }
+  return allianceColors[owner];
+}
+
+function createCustomIcon(owner) {
+  const initials = owner.slice(0, 3).toUpperCase();
+  const bgColor = getOwnerColor(owner);
+  const textColor = getTextColor(bgColor);
+
+  return L.divIcon({
+    className: 'custom-owner-icon',
+    html: `<div class="owner-marker" style="
+      background-color: ${bgColor};
+      color: ${textColor};
+    ">${initials}</div>`,
+    iconSize: [40, 24],
+    iconAnchor: [20, 12],
+    popupAnchor: [0, -12]
+  });
+}
+function getTextColor(bgColor) {
+  // Extract RGB from hex
+  const r = parseInt(bgColor.substr(1, 2), 16);
+  const g = parseInt(bgColor.substr(3, 2), 16);
+  const b = parseInt(bgColor.substr(5, 2), 16);
+
+  // Perceived brightness formula
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+
+  return brightness > 128 ? '#000000' : '#ffffff';
+}
+    // Add a new outpost and marker
+  function addOutpost(lat, lng, name, owner, skipSave = false) {
+    const outpost = { name, x: lng, y: lat, owner };
+
+    const icon = createCustomIcon(owner);
+    const marker = L.marker([lat, lng], { icon }).addTo(map);
+
+    const popupContent = `
+      <strong>${name}</strong><br>
+      Owner: ${owner}<br>
+      <button onclick="editOutpost(${lat}, ${lng})">✏️ Edit</button>
+      <button onclick="deleteOutpost(${lat}, ${lng})">🗑️ Delete</button>
+    `;
+
+    marker.bindPopup(popupContent);
+
+    markers.push({ marker, outpost });
+
+    if (!skipSave) saveOutposts();
+    updateOutpostList();
+  }
+  function deleteOutpost(lat, lng) {
+  const index = markers.findIndex(m => m.outpost.x === lng && m.outpost.y === lat);
+  if (index !== -1) {
+    markers[index].marker.remove();
+    markers.splice(index, 1);
+    saveOutposts();
+    updateOutpostList();
+  }
+}
+
+function editOutpost(lat, lng) {
+  const index = markers.findIndex(m => m.outpost.x === lng && m.outpost.y === lat);
+  if (index !== -1) {
+    const current = markers[index].outpost;
+    const newName = prompt("Edit outpost name:", current.name);
+    if (!newName) return;
+    const newOwner = prompt("Edit owner:", current.owner || '');
+
+    markers[index].marker.remove();
+    markers.splice(index, 1);
+    addOutpost(lat, lng, newName, newOwner);
+  }
+}
+    // Save to localStorage
+    function saveOutposts() {
+      const saved = markers.map(m => m.outpost);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+    }
+
+    // Load from localStorage
+    function loadOutposts() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      try {
+        const saved = JSON.parse(raw);
+        saved.forEach(op => {
+          addOutpost(op.y, op.x, op.name, op.owner, true);
+        });
+      } catch (e) {
+        console.error("Failed to load saved data", e);
+      }
+    }
+
+    // On map click: add marker
+    map.on('click', function (e) {
+      const lat = +e.latlng.lat.toFixed(1);
+      const lng = +e.latlng.lng.toFixed(1);
+
+      const name = prompt(`Enter outpost name for (X: ${lng}, Y: ${lat})`);
+      if (!name) return;
+
+      const owner = prompt(`Enter owner for "${name}"`);
+      addOutpost(lat, lng, name, owner || "Unowned");
+    });
+
+    loadOutposts();
+  </script>
+</body>
+</html>
