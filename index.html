@@ -6,28 +6,47 @@
   <title>Kingshot Outpost Map</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    html, body { margin: 0; height: 100%; font-family: sans-serif; }
-    #map { 
+    html, body {
+      margin: 0;
+      padding: 0;
       height: 100%;
-      width: calc(100% - 250px);
-      background: #1a1a1a;
-      color: #fff;
-      padding: 10px;
-      box-sizing: border-box;
-      overflow-y: auto;
-      float: left;
-      font-family: sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #1e1e1e;
+      color: #f0f0f0;
     }
+    #map { height: 100%; }
     #sidebar {
-      height: 100%;
-      width: calc(100% - 250px);
-      background: #1a1a1a;
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: #2a2a2a;
+      padding: 15px;
+      border-radius: 10px;
+      z-index: 999;
+      width: 220px;
+      font-size: 14px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+    #sidebar h3 {
+      margin-top: 10px;
+      margin-bottom: 10px;
+      color: #ffffff;
+    }
+    #sidebar button {
+      display: block;
+      width: 100%;
+      margin-bottom: 8px;
+      padding: 8px 12px;
+      background-color: #444;
       color: #fff;
-      padding: 10px;
-      box-sizing: border-box;
-      overflow-y: auto;
-      float: left;
-      font-family: sans-serif;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s;
+    }
+    #sidebar button:hover {
+      background-color: #666;
     }
     .owner-marker {
       border-radius: 4px;
