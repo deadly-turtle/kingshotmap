@@ -6,17 +6,28 @@
   <title>Kingshot Outpost Map</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    html, body { margin: 0; padding: 0; height: 100%; font-family: sans-serif; }
-    #map { height: 100%; }
-    #sidebar {
-      position: absolute;
-      top: 10px; left: 10px;
-      background: rgba(255, 255, 255, 0.9);
+    html, body { margin: 0; height: 100%; font-family: sans-serif; }
+    #map { 
+      height: 100%;
+      width: calc(100% - 250px);
+      background: #1a1a1a;
+      color: #fff;
       padding: 10px;
-      border-radius: 8px;
-      z-index: 999;
-      width: 200px;
-      font-size: 14px;
+      box-sizing: border-box;
+      overflow-y: auto;
+      float: left;
+      font-family: sans-serif;
+    }
+    #sidebar {
+      height: 100%;
+      width: calc(100% - 250px);
+      background: #1a1a1a;
+      color: #fff;
+      padding: 10px;
+      box-sizing: border-box;
+      overflow-y: auto;
+      float: left;
+      font-family: sans-serif;
     }
     .owner-marker {
       border-radius: 4px;
